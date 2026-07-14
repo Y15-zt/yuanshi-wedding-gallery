@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>元世创物 · 婚纱写真图册</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background:#fafafa; color:#333; }
+
+/* ===== Hero 封面区 ===== */
+.hero {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color:#fff;
+  text-align:center;
+  padding: 80px 20px 60px;
+  position:relative;
+}
+.hero-logo {
+  max-height: 120px;
+  width: auto;
+  margin: 0 auto 16px;
+  display: block;
+}
+.hero-sub {
+  font-size:14px;
+  color:rgba(255,255,255,0.55);
+  letter-spacing:3px;
+  font-weight:300;
+}
+.hero-line {
+  width:60px;
+  height:1px;
+  background:rgba(255,255,255,0.25);
+  margin:28px auto 0;
+}
+
+/* ===== 筛选区 ===== */
+.filter-bar {
+  background:#fff;
+  border-bottom:1px solid #eee;
+  padding:16px 40px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+.filter-label {
+  font-size:12px;
+  color:#999;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.folder-tabs { display:flex; gap:10px; flex-wrap:wrap; }
+.folder-tab {
+  padding:7px 18px;
+  border:1px solid #e5e5e5;
+  background:#fff;
+  border-radius:20px;
+  cursor:pointer;
+  font-size:13px;
+  color:#666;
+  transition:all .25s;
+}
+.folder-tab:hover { border-color:#333; color:#333; }
+.folder-tab.active { background:#333; color:#fff; border-color:#333; }
+
+/* ===== 照片网格 ===== */
+.container { max-width:1440px; margin:0 auto; padding:40px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:24px; }
+.grid.is-empty { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+.card {
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 4px 16px rgba(0,0,0,0.07);
+  transition:transform .35s cubic-bezier(.25,.46,.45,.94), box-shadow .35s;
+  cursor:pointer;
+  position:relative;
+}
+.card:hover {
+  transform:translateY(-6px);
+  box-shadow:0 16px 40px rgba(0,0,0,0.14);
+}
+.card-img {
+  width:100%;
+  height:400px;
+  object-fit:cover;
+  display:block;
+  background:#e8e8e8;
+}
+.card-info {
+  position:absolute;
+  bottom:0; left:0; right:0;
+  padding:48px 16px 16px;
+  background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+  color:#fff;
+  z-index:2;
+}
+.card-title { font-size:14px; font-weight:500; line-height:1.4; margin-bottom:4px; }
+.card-desc { font-size:12px; color:rgba(255,255,255,0.75); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+/* ===== 空状态 ===== */
+.empty-state {
+  text-align:center;
+  padding:100px 20px;
+  color:#999;
+}
+.empty-state svg {
+  width:64px;
+  height:64px;
+  stroke:#ccc;
+  margin-bottom:24px;
+}
+.empty-state h2 {
+  font-size:20px;
+  font-weight:400;
+  color:#666;
+  margin-bottom:8px;
+  letter-spacing:2px;
+}
+.empty-state p {
+  font-size:13px;
+  color:#aaa;
+  margin-bottom:28px;
+  line-height:1.8;
+}
+.empty-btn {
+  display:inline-block;
+  padding:10px 28px;
+  background:#333;
+  color:#fff;
+  border-radius:24px;
+  text-decoration:none;
+  font-size:13px;
+  letter-spacing:1px;
+  transition:background .2s;
+}
+.empty-btn:hover { background:#000; }
+
+/* ===== Lightbox ===== */
+.lightbox {
+  display:none; position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.92);
+  z-index:1000;
+  align-items:center; justify-content:center;
+}
+.lightbox.active { display:flex; }
+.lightbox img { max-width:90%; max-height:90%; object-fit:contain; }
+.lightbox-close { position:absolute; top:20px; right:30px; color:#fff; font-size:36px; cursor:pointer; opacity:.7; }
+.lightbox-close:hover { opacity:1; }
+.lightbox-nav { position:absolute; top:50%; transform:translateY(-50%); color:#fff; font-size:40px; cursor:pointer; opacity:.5; padding:20px; user-select:none; }
+.lightbox-nav:hover { opacity:1; }
+.lightbox-prev { left:10px; }
+.lightbox-next { right:10px; }
+
+/* ===== 左侧悬浮导航 ===== */
+.side-nav {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  background: #fff;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 4px 4px 24px rgba(0,0,0,0.08);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.side-nav-logo {
+  padding: 0 14px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+}
+.side-nav-logo img {
+  max-height: 60px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+.side-nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+.side-nav-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: all .2s;
+}
+.side-nav-item:hover .side-nav-icon {
+  background: #333;
+  color: #fff;
+}
+.side-nav-text {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+.side-nav-popup {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  opacity: 0;
+  visibility: hidden;
+  transition: all .25s;
+  text-align: center;
+  width: 180px;
+}
+.side-nav-item:hover .side-nav-popup {
+  opacity: 1;
+  visibility: visible;
+}
+.side-nav-popup img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto;
+}
+.side-nav-popup p {
+  font-size: 12px;
+  color: #999;
+  margin-top: 10px;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  background:#1a1a1a;
+  color:rgba(255,255,255,0.45);
+  text-align:center;
+  padding:48px 20px 40px;
+  font-size:12px;
+  line-height:2;
+}
+.site-footer .brand { color:rgba(255,255,255,0.8); font-size:14px; letter-spacing:4px; margin-bottom:4px; }
+.site-footer .divider { width:30px; height:1px; background:rgba(255,255,255,0.15); margin:16px auto; }
+.site-footer a { color:rgba(255,255,255,0.45); text-decoration:none; transition:color .2s; }
+.site-footer a:hover { color:rgba(255,255,255,0.8); }
+
+/* ===== 移动端 ===== */
+@media (max-width: 768px) {
+  .hero { padding: 52px 20px 40px; }
+  .hero-logo { width: 100px; }
+  .hero-sub { font-size: 12px; letter-spacing: 2px; }
+  .filter-bar { padding: 12px 16px; gap: 10px; }
+  .filter-label { font-size: 11px; }
+  .folder-tab { padding: 5px 12px; font-size: 12px; }
+  .container { padding: 20px 16px; }
+  .grid { grid-template-columns: 1fr; gap: 16px; }
+  .card-img { height: 240px; }
+  .lightbox-nav { font-size: 32px; padding: 12px; }
+  .lightbox-close { font-size: 28px; right: 16px; top: 16px; }
+  .side-nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hero 封面区 -->
+<div class="hero">
+  <img class="hero-logo" src="logo-light.png" alt="元世创物">
+  <div class="hero-sub">婚纱写真 · 私人图册</div>
+  <div class="hero-line"></div>
+</div>
+
+<!-- 筛选区 -->
+<div class="filter-bar">
+  <span class="filter-label">筛选</span>
+  <div class="folder-tabs" id="tabs"></div>
+</div>
+
+<!-- 照片网格 -->
+<div class="container" id="app">
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-close" onclick="closeLightboxBtn(event)">&times;</div>
+  <div class="lightbox-nav lightbox-prev" onclick="prevImage(event)">&#10094;</div>
+  <img id="lb-img" src="" alt="">
+  <div class="lightbox-nav lightbox-next" onclick="nextImage(event)">&#10095;</div>
+</div>
+
+<!-- Footer -->
+<div class="site-footer">
+  <div class="brand">元世创物</div>
+  <div>私人图册 · 仅供阅览</div>
+  <div class="divider"></div>
+  <a href="admin.html">管理后台</a>
+</div>
+
+<!-- 左侧悬浮导航 -->
+<div class="side-nav">
+  <div class="side-nav-logo">
+    <img src="nav-logo-dark.png" alt="元世创物">
+  </div>
+  <div class="side-nav-item">
+    <div class="side-nav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    </div>
+    <span class="side-nav-text">微信咨询</span>
+    <div class="side-nav-popup">
+      <img src="wechat-qr.png" alt="微信二维码">
+      <p>扫码添加微信</p>
+    </div>
+  </div>
+  <div class="side-nav-item">
+    <div class="side-nav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    </div>
+    <span class="side-nav-text">淘宝店铺</span>
+    <div class="side-nav-popup">
+      <img src="taobao-qr.png" alt="淘宝二维码">
+      <p>扫码进入店铺</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// 自动清理旧数据库，避免版本冲突
+indexedDB.deleteDatabase('GalleryDB');
+
+const DB_NAME = 'GalleryDB_v3';
+const DB_VERSION = 3;
+let db = null;
+let currentFolder = 'all';
+let photos = [];
+let folders = [];
+let lightboxIndex = 0;
+let currentFiltered = [];
+
+function openDB() {
+  return new Promise(function(resolve, reject) {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = function() { reject(req.error); };
+    req.onsuccess = function() { db = req.result; resolve(db); };
+    req.onupgradeneeded = function(e) {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('photos')) {
+        const store = d.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('folder', 'folder', { unique: false });
+      }
+      if (!d.objectStoreNames.contains('folders')) {
+        d.createObjectStore('folders', { keyPath: 'name' });
+      }
+      if (!d.objectStoreNames.contains('settings')) {
+        d.createObjectStore('settings', { keyPath: 'key' });
+      }
+    };
+  });
+}
+
+function getAll(store) {
+  return new Promise(function(resolve, reject) {
+    if (!db) return resolve([]);
+    const tx = db.transaction(store, 'readonly');
+    const s = tx.objectStore(store);
+    if (s.getAll) {
+      const req = s.getAll();
+      req.onsuccess = function() { resolve(req.result || []); };
+      req.onerror = function() { reject(req.error); };
+    } else {
+      const req = s.openCursor();
+      const out = [];
+      req.onsuccess = function(e) {
+        const c = e.target.result;
+        if (c) { out.push(c.value); c.continue(); } else { resolve(out); }
+      };
+      req.onerror = function() { reject(req.error); };
+    }
+  });
+}
+
+async function loadData() {
+  photos = await getAll('photos');
+  folders = await getAll('folders');
+  renderTabs();
+  renderGrid();
+}
+
+function renderTabs() {
+  const el = document.getElementById('tabs');
+  let html = '<div class="folder-tab ' + (currentFolder === 'all' ? 'active' : '') + '" onclick="setFolder(\'all\')">全部</div>';
+  folders.forEach(function(f) {
+    html += '<div class="folder-tab ' + (currentFolder === f.name ? 'active' : '') + '" onclick="setFolder(\'' + f.name.replace(/'/g, "\\'").replace(/"/g, '&quot;') + '\')">' + f.name.replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function setFolder(name) {
+  currentFolder = name;
+  renderTabs();
+  renderGrid();
+}
+
+function getObjPos(position) {
+  if (!position) return 'center';
+  if (position === 'top') return 'center top';
+  if (position === 'bottom') return 'center bottom';
+  if (position === 'center') return 'center';
+  return position;
+}
+
+function renderGrid() {
+  const el = document.getElementById('grid');
+  const filtered = currentFolder === 'all' ? photos : photos.filter(function(p) { return p.folder === currentFolder; });
+  currentFiltered = filtered;
+  if (filtered.length === 0) {
+    el.classList.add('is-empty');
+    el.innerHTML = '<div class="empty-state">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M5 7l2-3h10l2 3"/></svg>' +
+      '<h2>相册静待开启</h2>' +
+      '<p>摄影师正在为您精心准备<br>每一张都值得期待</p>' +
+      '<a class="empty-btn" href="admin.html">进入管理后台</a>' +
+      '</div>';
+    return;
+  }
+  el.classList.remove('is-empty');
+  let html = '';
+  filtered.forEach(function(p, i) {
+    const pos = getObjPos(p.position);
+    html += '<div class="card" onclick="openLightbox(' + i + ')">';
+    html += '<img class="card-img" src="' + (p.thumb || p.data) + '" alt="' + (p.title || '').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') + '" style="object-position:' + pos + '" loading="lazy">';
+    html += '<div class="card-info">';
+    html += '<div class="card-title">' + (p.title || '未命名').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') + '</div>';
+    html += '<div class="card-desc">' + (p.desc || '').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;') + '</div>';
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function openLightbox(idx) {
+  lightboxIndex = idx;
+  const p = currentFiltered[idx];
+  document.getElementById('lb-img').src = p.data;
+  document.getElementById('lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+  if (e.target.id === 'lightbox') closeLightboxBtn(e);
+}
+
+function closeLightboxBtn(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function prevImage(e) {
+  e.stopPropagation();
+  if (lightboxIndex > 0) openLightbox(lightboxIndex - 1);
+}
+
+function nextImage(e) {
+  e.stopPropagation();
+  if (lightboxIndex < currentFiltered.length - 1) openLightbox(lightboxIndex + 1);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (!document.getElementById('lightbox').classList.contains('active')) return;
+  if (e.key === 'Escape') closeLightboxBtn();
+  if (e.key === 'ArrowLeft') prevImage({ stopPropagation: function() {} });
+  if (e.key === 'ArrowRight') nextImage({ stopPropagation: function() {} });
+});
+
+// 滑动手势支持
+let touchStartX = 0;
+let touchStartY = 0;
+document.getElementById('lightbox').addEventListener('touchstart', function(e) {
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+}, { passive: true });
+document.getElementById('lightbox').addEventListener('touchend', function(e) {
+  if (!document.getElementById('lightbox').classList.contains('active')) return;
+  const touchEndX = e.changedTouches[0].clientX;
+  const touchEndY = e.changedTouches[0].clientY;
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+    if (dx > 0 && lightboxIndex > 0) {
+      prevImage({ stopPropagation: function() {} });
+    } else if (dx < 0 && lightboxIndex < currentFiltered.length - 1) {
+      nextImage({ stopPropagation: function() {} });
+    }
+  }
+}, { passive: true });
+
+openDB().then(loadData).catch(function(err) {
+  console.error(err);
+  document.getElementById('grid').innerHTML = '<div class="empty-state">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="12" cy="13" r="3"/><path d="M5 7l2-3h10l2 3"/></svg>' +
+    '<h2>数据库初始化失败</h2>' +
+    '<p>请使用现代浏览器（Chrome / Edge / Firefox / Safari）</p>' +
+    '</div>';
+});
+</script>
+</body>
+</html>
